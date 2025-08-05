@@ -93,13 +93,13 @@ EMBEDDING_BASE_URL=https://api.openai.com/v1
 - **🐳 Docker Compose Setup**: Ready-to-run containerized environment
 - **🧪 Comprehensive Test Suite**: Unit and integration tests  
 - **💻 Web UI**: Full-featured frontend interface
+- **🚀 Live Demo**: Deployed the app on Railway
 
 ### Enhanced Features 🌟
 - **🔄 OpenAI-Compatible Provider Flexibility**: Switch between any AI provider instantly
 - **🏢 Mixed Provider Support**: Use different providers for LLM vs embeddings  
 - **📊 Document Management**: Full CRUD operations (list, upload, delete)
 - **🔍 Test Retrieval Endpoint**: Debug similarity search without LLM calls
-- **👤 User Isolation**: Each user has their own document space
 - **🎨 Rich Frontend UI**: Complete web interface
 - **📈 Detailed Response Metadata**: Scores, retrieval context, response times
 - **⚠️ Error Handling**: Comprehensive error responses with proper HTTP codes
