@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: twerlo_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: twerlo_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - twerlo_network
+
+  qdrant:
+    image: qdrant/qdrant:1.8.1
+    container_name: twerlo_qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - twerlo_network
+
+  app:
+    build: .
+    container_name: twerlo_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://admin:admin123@mongodb:27017/twerlo_db?authSource=admin
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your_super_secret_jwt_key_here}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMBEDDING_API_BASE=${EMBEDDING_API_BASE}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
+      - LLM_API_BASE=${LLM_API_BASE}
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_MODEL_NAME=${LLM_MODEL_NAME}
+    depends_on:
+      - mongodb
+      - qdrant
+    networks:
+      - twerlo_network
+    volumes:
+      - ./app:/app/app:ro  
+
+volumes:
+  mongodb_data:
+  qdrant_data:
+
+networks:
+  twerlo_network:
+    driver: bridge

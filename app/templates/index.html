@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twerlo - AI Q&A System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: #333;
+            color: white;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .nav button:hover {
+            background: #0056b3;
+        }
+
+        .nav button.active {
+            background: #28a745;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .chat-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 1rem;
+            background: #f9f9f9;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .chat-message.user {
+            background: #007bff;
+            color: white;
+            text-align: right;
+        }
+
+        .chat-message.assistant {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+
+        .document-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .document-item h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .document-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .document-actions {
+            text-align: right;
+        }
+
+        .document-actions button {
+            width: auto;
+            padding: 8px 16px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .test-result {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+
+        .test-result h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+
+        .test-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .chunk-text {
+            background: white;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Twerlo AI Q&A System</h1>
+        <p>Upload documents and ask questions powered by AI</p>
+    </div>
+
+    <div class="container">
+        <!-- Navigation -->
+        <div class="nav">
+            <button id="loginBtn" class="active" onclick="showSection('login')">Login</button>
+            <button id="uploadBtn" onclick="showSection('upload')" disabled>Upload</button>
+            <button id="manageBtn" onclick="loadDocuments(); showSection('manage');" disabled>Manage Docs</button>
+            <button id="testBtn" onclick="showSection('test')" disabled>Test Retrieval</button>
+            <button id="chatBtn" onclick="showSection('chat')" disabled>Chat</button>
+            <button id="logoutBtn" onclick="logout()" class="hidden">Logout</button>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="section active">
+            <h2>Login / Register</h2>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="your@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="your password" required>
+            </div>
+            
+            <button onclick="login()">Login</button>
+            <button onclick="register()">Register</button>
+            
+            <div id="authMessage"></div>
+        </div>
+
+        <!-- Upload Section -->
+        <div id="uploadSection" class="section">
+            <h2>Upload Documents</h2>
+            <p>Upload PDF or TXT files to build your knowledge base</p>
+            
+            <div class="form-group">
+                <label for="fileInput">Choose File:</label>
+                <input type="file" id="fileInput" accept=".pdf,.txt" required>
+            </div>
+            
+            <button onclick="uploadFile()">Upload Document</button>
+            
+            <div id="uploadMessage"></div>
+            <div id="fileInfo" class="file-info hidden"></div>
+        </div>
+
+        <!-- Manage Documents Section -->
+        <div id="manageSection" class="section">
+            <h2>Manage Documents</h2>
+            <p>View and manage your uploaded documents</p>
+            
+            <button onclick="loadDocuments()">Load Document List</button>
+            
+            <div id="documentsContainer">
+                <div class="message info">Click "Load Document List" to load your documents.</div>
+            </div>
+            
+            <div id="manageMessage"></div>
+        </div>
+
+        <!-- Test Retrieval Section -->
+        <div id="testSection" class="section">
+            <h2>Test Document Retrieval</h2>
+            <p>Test how well the system finds relevant content for your questions</p>
+            
+            <div class="form-group">
+                <label for="testQueryInput">Test Query:</label>
+                <textarea id="testQueryInput" rows="2" placeholder="Enter a test query"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="testScoreThresholdInput">Similarity Score Threshold:</label>
+                <input type="number" id="testScoreThresholdInput" step="0.01" value="0.01">
+            </div>
+
+            <div class="form-group">
+                <label for="testLimitInput">Results Limit:</label>
+                <input type="number" id="testLimitInput" value="10">
+            </div>
+
+            <button onclick="testRetrieval()">Search</button>
+            
+            <div id="testResults" class="chat-container hidden">
+                <!-- Test results will appear here -->
+            </div>
+            
+            <div id="testMessage"></div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatSection" class="section">
+            <h2>Ask Questions</h2>
+            <p>Ask questions about your uploaded documents</p>
+            <br/>
+            <div id="chatContainer" style="display: none;" class="chat-container">
+            </div>
+
+            
+            <div class="form-group">
+                <label for="questionInput">Your Question:</label>
+                <textarea id="questionInput" rows="3" placeholder="What would you like to know about your documents?"></textarea>
+            </div>
+            
+            <button onclick="askQuestion()">Ask Question</button>
+            
+            <div id="chatMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            if (authToken) {
+                showLoggedInState();
+            }
+        });
+
+        // Show/hide sections
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.add('active');
+            document.getElementById(sectionName + 'Btn').classList.add('active');
+        }
+
+        // API call helper
+        async function apiCall(endpoint, method = 'GET', data = null, isFormData = false) {
+            // Dynamic API base URL - works for both local and deployed environments
+            const API_BASE_URL = window.location.origin;
+            
+            const options = {
+                method: method,
+                headers: {}
+            };
+
+            if (authToken) {
+                options.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            if (data && !isFormData) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(data);
+            } else if (data && isFormData) {
+                options.body = data;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+                
+                if (!response.ok) {
+                    let errorMessage = 'Request failed';
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            // Handle validation errors (array of error objects)
+                            if (Array.isArray(errorData.detail)) {
+                                errorMessage = errorData.detail.map(err => 
+                                    `${err.loc ? err.loc.join('.') + ': ' : ''}${err.msg}`
+                                ).join(', ');
+                            } else {
+                                errorMessage = errorData.detail;
+                            }
+                        }
+                    } catch (parseError) {
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                throw error;
+            }
+        }
+
+        // Show message helper
+        function showMessage(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="message ${type}">${message}</div>`;
+            
+            // Clear message after 5 seconds
+            setTimeout(() => {
+                element.innerHTML = '';
+            }, 5000);
+        }
+
+        // Register function
+        async function register() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showMessage('authMessage', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('authMessage', 'Please enter a valid email address', 'error');
+                return;
+            }
+
+            // Password validation
+            if (password.length < 6) {
+                showMessage('authMessage', 'Password must be at least 6 characters long', 'error');
+                return;
+            }
+
+            try {
+                const result = await apiCall('/register', 'POST', {
+                    email: email,
+                    password: password
+                });
+                
+                showMessage('authMessage', 'Registration successful! You can now login.', 'success');
+                
+                // Clear form
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                
+            } catch (error) {
+                showMessage('authMessage', `Registration failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Login function
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showMessage('authMessage', 'Please fill in all fields', 'error');
+                return;
+            }
+
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessage('authMessage', 'Please enter a valid email address', 'error');
+                return;
+            }
+
+            try {
+                const result = await apiCall('/login', 'POST', {
+                    email: email,
+                    password: password
+                });
+                
+                authToken = result.access_token;
+                localStorage.setItem('authToken', authToken);
+                currentUser = email;
+                
+                showLoggedInState();
+                showMessage('authMessage', 'Login successful!', 'success');
+                
+                // Switch to upload section
+                setTimeout(() => {
+                    showSection('upload');
+                }, 1000);
+                
+            } catch (error) {
+                showMessage('authMessage', `Login failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Show logged in state
+        function showLoggedInState() {
+            // Clear any previous user's data first (SECURITY FIX)
+            clearUserSpecificData();
+            
+            document.getElementById('uploadBtn').disabled = false;
+            document.getElementById('manageBtn').disabled = false;
+            document.getElementById('testBtn').disabled = false;
+            document.getElementById('chatBtn').disabled = false;
+            document.getElementById('logoutBtn').classList.remove('hidden');
+        }
+
+        // Clear user-specific data (called on login and logout)
+        function clearUserSpecificData() {
+            // Clear file input
+            document.getElementById('fileInput').value = '';
+            document.getElementById('questionInput').value = '';
+            document.getElementById('testQueryInput').value = '';
+            
+            // Clear chat history
+            document.getElementById('chatContainer').innerHTML = '';
+            
+            // Clear documents list
+            document.getElementById('documentsContainer').innerHTML = '<div class="message info">Click "Load Document List" to load your documents.</div>';
+            
+            // Clear test results
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('testResults').classList.add('hidden');
+            
+            // Clear file info
+            document.getElementById('fileInfo').innerHTML = '';
+            document.getElementById('fileInfo').classList.add('hidden');
+            
+            // Clear messages
+            document.getElementById('uploadMessage').innerHTML = '';
+            document.getElementById('manageMessage').innerHTML = '';
+            document.getElementById('testMessage').innerHTML = '';
+            document.getElementById('chatMessage').innerHTML = '';
+        }
+
+        // Logout function
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            
+            // Reset UI
+            document.getElementById('uploadBtn').disabled = true;
+            document.getElementById('manageBtn').disabled = true;
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('chatBtn').disabled = true;
+            document.getElementById('logoutBtn').classList.add('hidden');
+            
+            // Clear forms and user-specific data
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('questionInput').value = '';
+            
+            // Clear chat history
+            document.getElementById('chatContainer').innerHTML = '';
+            
+            // Clear file info 
+            document.getElementById('fileInfo').innerHTML = '';
+            document.getElementById('fileInfo').classList.add('hidden');
+            
+            // Clear any messages
+            document.getElementById('authMessage').innerHTML = '';
+            document.getElementById('uploadMessage').innerHTML = '';
+            document.getElementById('chatMessage').innerHTML = '';
+            
+            showSection('login');
+            showMessage('authMessage', 'Logged out successfully', 'info');
+        }
+
+        // Upload file function
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('uploadMessage', 'Please select a file', 'error');
+                return;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.pdf') && !file.name.toLowerCase().endsWith('.txt')) {
+                showMessage('uploadMessage', 'Please select a PDF or TXT file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showMessage('uploadMessage', 'Uploading and processing file...', 'info');
+                
+                const result = await apiCall('/documents/upload', 'POST', formData, true);
+                
+                showMessage('uploadMessage', `File uploaded successfully! Created ${result.chunks_count} text chunks.`, 'success');
+                
+                // Show file info
+                const fileInfo = document.getElementById('fileInfo');
+                fileInfo.innerHTML = `
+                    <h4>File Details:</h4>
+                    <p><strong>Filename:</strong> ${result.filename}</p>
+                    <p><strong>Type:</strong> ${result.content_type}</p>
+                    <p><strong>Size:</strong> ${(result.file_size / 1024).toFixed(2)} KB</p>
+                    <p><strong>Text Chunks:</strong> ${result.chunks_count}</p>
+                    <p><strong>Uploaded:</strong> ${new Date(result.created_at).toLocaleString()}</p>
+                `;
+                fileInfo.classList.remove('hidden');
+                
+                // Clear file input
+                fileInput.value = '';
+                
+            } catch (error) {
+                showMessage('uploadMessage', `Upload failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Ask question function
+        async function askQuestion() {
+            document.getElementById('chatContainer').style.display = 'block';
+            const question = document.getElementById('questionInput').value.trim();
+
+            if (!question) {
+                showMessage('chatMessage', 'Please enter a question', 'error');
+                return;
+            }
+
+            // Add user message to chat
+            addMessageToChat(question, 'user');
+            
+            // Clear input
+            document.getElementById('questionInput').value = '';
+            
+            // Show loading
+            const loadingDiv = addMessageToChat('Thinking...', 'assistant loading');
+
+            try {
+                const result = await apiCall('/ask', 'POST', {
+                    question: question
+                });
+                
+                // Remove loading message
+                loadingDiv.remove();
+                
+                // Add assistant response
+                addMessageToChat(result.answer, 'assistant');
+                
+                // Show retrieved chunks info
+                if (result.retrieved_chunks && result.retrieved_chunks.length > 0) {
+                    const chunksInfo = `📄 Found ${result.retrieved_chunks.length} relevant document chunks (Response time: ${result.response_time_ms}ms)`;
+                    addMessageToChat(chunksInfo, 'assistant info');
+                }
+                
+            } catch (error) {
+                // Remove loading message
+                loadingDiv.remove();
+                
+                addMessageToChat(`Sorry, I couldn't process your question: ${error.message}`, 'assistant error');
+                showMessage('chatMessage', `Question failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Add message to chat
+        function addMessageToChat(message, type) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+            messageDiv.textContent = message;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        // Load documents function
+        async function loadDocuments() {
+            try {
+                
+                const documents = await apiCall('/documents/', 'GET');
+                
+                const container = document.getElementById('documentsContainer');
+                
+                if (documents.length === 0) {
+                    container.innerHTML = '<div class="message info">No documents uploaded yet. Upload some documents first!</div>';
+                    showMessage('manageMessage', 'No documents found', 'info');
+                    return;
+                }
+                
+                let html = '';
+                documents.forEach(doc => {
+                    html += `
+                        <div class="document-item">
+                            <h4>📄 ${doc.filename}</h4>
+                            <div class="document-meta">
+                                <strong>Type:</strong> ${doc.content_type} | 
+                                <strong>Size:</strong> ${(doc.file_size / 1024).toFixed(2)} KB | 
+                                <strong>Chunks:</strong> ${doc.chunks_count} | 
+                                <strong>Uploaded:</strong> ${new Date(doc.created_at).toLocaleString()}
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn-danger" onclick="deleteDocument('${doc.id}', '${doc.filename}')">Delete Document</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                showMessage('manageMessage', `Failed to load documents: ${error.message}`, 'error');
+            }
+        }
+
+        // Delete document function
+        async function deleteDocument(documentId, filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                showMessage('manageMessage', 'Deleting document...', 'info');
+                
+                const result = await apiCall(`/documents/${documentId}`, 'DELETE');
+                
+                showMessage('manageMessage', `Document "${filename}" deleted successfully!`, 'success');
+                
+                // Reload the documents list
+                setTimeout(() => {
+                    loadDocuments();
+                }, 1000);
+                
+            } catch (error) {
+                showMessage('manageMessage', `Failed to delete document: ${error.message}`, 'error');
+            }
+        }
+
+        // Test retrieval function
+        async function testRetrieval() {
+            const query = document.getElementById('testQueryInput').value.trim();
+            const score_threshold = document.getElementById('testScoreThresholdInput').value.trim();
+            const limit = document.getElementById('testLimitInput').value.trim();
+
+            if (!query) {
+                showMessage('testMessage', 'Please enter a test query', 'error');
+                return;
+            }
+
+            try {
+                showMessage('testMessage', 'Testing retrieval...', 'info');
+
+                const result = await apiCall('/documents/query', 'POST', {
+                    query: query,
+                    score_threshold: score_threshold,
+                    limit: limit
+                });
+                
+                // Show results
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.classList.remove('hidden');
+                
+                let html = `
+                    <div class="test-result">
+                        <h4>📊 Retrieval Test Results</h4>
+                        <div class="test-meta">
+                            <strong>Query:</strong> ${result.query}<br>
+                            <strong>Chunks Found:</strong> ${result.chunks_found}<br>
+                            <strong>Score Threshold:</strong> ${result.score_threshold_used}<br>
+                            <strong>Embedding Preview:</strong> [${result.embedding_preview.join(', ')}...]
+                        </div>
+                `;
+                
+                if (result.chunks_found === 0) {
+                    html += '<div class="message error">❌ No relevant chunks found! Try uploading documents or lowering the threshold.</div>';
+                } else {
+                    html += `<div class="message success">✅ Found ${result.chunks_found} relevant chunks!</div>`;
+                    
+                    result.retrieved_chunks.forEach((chunk, index) => {
+                        html += `
+                            <div class="test-result">
+                                <h4>📄 Chunk ${index + 1} (Score: ${chunk.score.toFixed(4)})</h4>
+                                <div class="test-meta">
+                                    <strong>Source:</strong> ${chunk.metadata.filename} (Chunk ${chunk.metadata.chunk_index})
+                                </div>
+                                <div class="chunk-text">${chunk.text.substring(0, 300)}${chunk.text.length > 300 ? '...' : ''}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '</div>';
+                resultsContainer.innerHTML = html;
+                
+                showMessage('testMessage', `Test completed! Found ${result.chunks_found} chunks with threshold ${result.score_threshold_used}`, 'success');
+                
+            } catch (error) {
+                showMessage('testMessage', `Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Handle Enter key in question inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('questionInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    askQuestion();
+                }
+            });
+
+            document.getElementById('testQueryInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    testRetrieval();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
