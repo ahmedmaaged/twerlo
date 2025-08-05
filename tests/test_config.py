@@ -14,7 +14,7 @@ def test_configuration_loading():
     # Test that required settings exist
     required_settings = [
         'jwt_secret_key', 'jwt_algorithm', 'access_token_expire_minutes',
-        'mongodb_url', 'database_name', 'qdrant_host', 'qdrant_port',
+        'mongodb_url', 'database_name', 'qdrant_url',
         'app_host', 'app_port', 'max_file_size_mb'
     ]
     
@@ -29,7 +29,7 @@ def test_default_values():
     # Test default values
     assert settings.jwt_algorithm == "HS256"
     assert settings.access_token_expire_minutes == 30
-    assert settings.qdrant_port == 6333
+    assert settings.qdrant_url == "http://localhost:6333"
     assert settings.max_file_size_mb == 10
     assert settings.app_port == 8000
 
@@ -44,8 +44,7 @@ def test_database_configuration():
     assert settings.database_name == "twerlo_db"
     
     # Test Qdrant settings
-    assert hasattr(settings, 'qdrant_host')
-    assert hasattr(settings, 'qdrant_port')
+    assert hasattr(settings, 'qdrant_url')
     assert hasattr(settings, 'qdrant_collection_name')
     assert settings.qdrant_collection_name == "documents"
 
