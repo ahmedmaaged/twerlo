@@ -93,6 +93,7 @@ EMBEDDING_BASE_URL=https://api.openai.com/v1
 - **🐳 Docker Compose Setup**: Ready-to-run containerized environment
 - **🧪 Comprehensive Test Suite**: Unit and integration tests  
 - **💻 Web UI**: Full-featured frontend interface
+- **🚀 Live Demo**: Deployed the app on Railway
 
 ### Enhanced Features 🌟
 - **🔄 OpenAI-Compatible Provider Flexibility**: Switch between any AI provider instantly
